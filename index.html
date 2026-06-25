@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ndysky Barbershop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <script>
+        // Simple Auth Check
+        if (localStorage.getItem('barberpos_loggedin') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-cut"></i>
+            <h2 style="font-size: 18px;">Ndysky Barbershop</h2>
+        </div>
+        
+        <div class="live-clock glass" style="text-align:center; padding:15px; margin-bottom:20px;">
+            <div id="clock-time" style="font-size:24px; font-weight:800; color:var(--primary);">00:00:00</div>
+            <div id="clock-date" style="font-size:12px; color:var(--text-muted);">Hari, Tanggal</div>
+        </div>
+
+        <ul class="nav-links">
+            <li class="active" onclick="switchTab('dashboard')">
+                <i class="fas fa-home"></i> Dashboard
+            </li>
+            <li onclick="switchTab('kasir')">
+                <i class="fas fa-list-ul"></i> Layanan
+            </li>
+            <li onclick="switchTab('capster')">
+                <i class="fas fa-users"></i> Capster
+            </li>
+            <li onclick="switchTab('riwayat')">
+                <i class="fas fa-history"></i> Riwayat
+            </li>
+            <li onclick="switchTab('laporan')">
+                <i class="fas fa-chart-bar"></i> Laporan
+            </li>
+        </ul>
+        <div class="user-profile">
+            <div>
+                <strong style="color:var(--text-main); font-size:14px;" id="user-name-display">Admin</strong>
+                <div style="font-size:12px; color:var(--text-muted);">Kasir</div>
+            </div>
+            <button class="btn-logout" onclick="logout()" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">Transaksi Berhasil!</div>
+
+        <!-- DASHBOARD TAB -->
+        <section id="dashboard" class="tab-content active">
+            <header>
+                <h1>Dashboard Overview</h1>
+                <p>Ringkasan performa barbershop hari ini</p>
+            </header>
+            <div class="cards">
+                <div class="card glass">
+                    <i class="fas fa-wallet card-icon"></i>
+                    <h3>Total Pemasukan</h3>
+                    <p id="dash-pemasukan">Rp 0</p>
+                </div>
+                <div class="card glass">
+                    <i class="fas fa-exchange-alt card-icon"></i>
+                    <h3>Total Transaksi</h3>
+                    <p id="dash-transaksi">0</p>
+                </div>
+                <div class="card glass">
+                    <i class="fas fa-users card-icon"></i>
+                    <h3>Total Capster Aktif</h3>
+                    <p id="dash-capster">0</p>
+                </div>
+                <div class="card glass">
+                    <i class="fas fa-user-check card-icon"></i>
+                    <h3>Pelanggan Hari Ini</h3>
+                    <p id="dash-pelanggan-hari-ini">0</p>
+                </div>
+            </div>
+            
+            <div class="dashboard-widgets" style="margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Transaksi Terakhir -->
+                <div class="widget glass" style="padding: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-muted);"><i class="fas fa-history"></i> Transaksi Terakhir</h3>
+                    <ul id="widget-recent" style="list-style:none; padding:0;">
+                        <!-- List dari JS -->
+                    </ul>
+                </div>
+
+                <!-- Layanan Terlaris -->
+                <div class="widget glass" style="padding: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-muted);"><i class="fas fa-star"></i> Layanan Terlaris</h3>
+                    <ul id="widget-top-services" style="list-style:none; padding:0;">
+                        <!-- List dari JS -->
+                    </ul>
+                </div>
+
+                <!-- Top 3 Capster -->
+                <div class="widget glass" style="padding: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-muted);"><i class="fas fa-trophy"></i> Top 3 Capster Hari Ini</h3>
+                    <ul id="widget-top-capster" style="list-style:none; padding:0;">
+                        <!-- List dari JS -->
+                    </ul>
+                </div>
+
+                <!-- Performa Capster -->
+                <div class="widget glass" style="padding: 20px;">
+                    <h3 style="margin-bottom: 15px; font-size: 16px; color: var(--text-muted);"><i class="fas fa-chart-line"></i> Performa Capster Hari Ini</h3>
+                    <ul id="widget-performa-capster" style="list-style:none; padding:0; display:flex; flex-direction:column; gap:15px;">
+                        <!-- List dari JS -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- KASIR / LAYANAN TAB -->
+        <section id="kasir" class="tab-content">
+            <header>
+                <h1>Layanan & Transaksi</h1>
+                <p>Pilih layanan dan proses pembayaran</p>
+            </header>
+            
+            <div class="kasir-grid">
+                <!-- Kiri: Daftar Layanan -->
+                <div class="layanan-container glass">
+                    <div class="header-actions">
+                        <h2><i class="fas fa-list-ul"></i> Daftar Layanan</h2>
+                        <button class="btn-sm" style="background:var(--primary); color:#121212; border:none;" onclick="openModalLayanan()">
+                            <i class="fas fa-plus"></i> Tambah Layanan
+                        </button>
+                    </div>
+                    <input type="text" id="search-layanan" class="search-bar" placeholder="Cari layanan..." onkeyup="filterLayanan()">
+                    <div id="grid-layanan" class="grid-layanan">
+                        <!-- Data layanan dari API masuk ke sini -->
+                    </div>
+                </div>
+
+                <!-- Kanan: Keranjang Transaksi -->
+                <div class="keranjang-container glass">
+                    <h2><i class="fas fa-shopping-cart"></i> Detail Transaksi</h2>
+                    
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label>Pilih Capster <span style="color:var(--danger)">*</span></label>
+                        <select id="select-capster" class="search-bar" style="width:100%; margin-bottom:0;" required>
+                            <option value="">-- Pilih Capster --</option>
+                        </select>
+                    </div>
+
+                    <ul id="list-keranjang" class="list-keranjang">
+                        <!-- Item keranjang masuk sini -->
+                        <div class="empty-cart">Keranjang masih kosong</div>
+                    </ul>
+
+                    <div class="ringkasan">
+                        <div class="row-ringkasan">
+                            <span>Subtotal</span>
+                            <span id="subtotal-harga">Rp 0</span>
+                        </div>
+                        <div class="form-group" style="display:flex; justify-content:space-between; align-items:center;">
+                            <label style="margin:0;">Diskon (%)</label>
+                            <input type="number" id="input-diskon" placeholder="0" min="0" max="100" style="width:80px; padding:8px;" oninput="hitungKembalian()">
+                        </div>
+                        <div class="row-ringkasan">
+                            <span>Total Harga</span>
+                            <span id="total-harga" class="total-text">Rp 0</span>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Pelanggan (Opsional)</label>
+                            <input type="text" id="input-pelanggan" placeholder="Nama pelanggan">
+                        </div>
+                        <div class="form-group">
+                            <label>Uang Pembayaran (Rp)</label>
+                            <input type="text" id="input-bayar" placeholder="0" oninput="formatInputRupiah(this); hitungKembalian();">
+                        </div>
+                        <div class="row-ringkasan">
+                            <span>Kembalian</span>
+                            <span id="kembalian" class="kembalian-text">Rp 0</span>
+                        </div>
+                        <div class="action-buttons" style="display:flex; gap:10px; margin-top:15px;">
+                            <button id="btn-batal" class="btn-primary" style="background:var(--danger); color:white;" onclick="batalkanTransaksi()">
+                                <i class="fas fa-times-circle"></i> Batal
+                            </button>
+                            <button id="btn-proses" class="btn-primary" style="background:var(--success); color:white;" onclick="prosesTransaksi()" disabled>
+                                <i class="fas fa-check-circle"></i> Bayar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIWAYAT TAB -->
+        <section id="riwayat" class="tab-content">
+            <header class="header-actions">
+                <div>
+                    <h1>Riwayat Transaksi</h1>
+                    <p>Catatan seluruh transaksi yang telah selesai</p>
+                </div>
+                <button class="btn-sm" style="background:var(--success); color:white; border:none; padding:10px 15px; font-size:14px;" onclick="exportCSV()">
+                    <i class="fas fa-file-csv"></i> Export CSV
+                </button>
+            </header>
+            <div class="table-container glass">
+                <table class="table-riwayat">
+                    <thead>
+                        <tr>
+                            <th>Kode TRX</th>
+                            <th>Tanggal</th>
+                            <th>Capster</th>
+                            <th>Total</th>
+                            <th>Bayar</th>
+                            <th>Kembali</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-riwayat">
+                        <!-- Data dari API masuk ke sini -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- CAPSTER TAB -->
+        <section id="capster" class="tab-content">
+            <header class="header-actions">
+                <div>
+                    <h1>Manajemen Capster</h1>
+                    <p>Kelola data dan target capster barbershop</p>
+                </div>
+                <button class="btn-sm" style="background:var(--primary); color:#121212; border:none; padding:10px 15px; font-size:14px;" onclick="openModalCapster()">
+                    <i class="fas fa-plus"></i> Tambah Capster
+                </button>
+            </header>
+            <div class="table-container glass">
+                <table class="table-riwayat">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama Capster</th>
+                            <th>No HP</th>
+                            <th>Target/Hari</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-capster">
+                        <!-- Data dari API -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- LAPORAN TAB -->
+        <section id="laporan" class="tab-content">
+            <header class="header-actions">
+                <div>
+                    <h1>Laporan Capster</h1>
+                    <p>Ringkasan performa dan pendapatan capster</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <select id="filter-laporan" class="search-bar" style="margin:0; width:auto; padding:8px 12px;" onchange="loadLaporan()">
+                        <option value="hari_ini">Hari Ini</option>
+                        <option value="minggu_ini">Minggu Ini</option>
+                        <option value="bulan_ini">Bulan Ini</option>
+                        <option value="custom">Custom Date Range</option>
+                    </select>
+                    <div id="custom-date-laporan" style="display:none; gap:10px;">
+                        <input type="date" id="start-date" class="search-bar" style="margin:0; padding:8px;" onchange="loadLaporan()">
+                        <span style="color:white; align-self:center;">-</span>
+                        <input type="date" id="end-date" class="search-bar" style="margin:0; padding:8px;" onchange="loadLaporan()">
+                    </div>
+                </div>
+            </header>
+            <div class="table-container glass">
+                <table class="table-riwayat">
+                    <thead>
+                        <tr>
+                            <th>Nama Capster</th>
+                            <th>Pelanggan Hari Ini</th>
+                            <th>Pelanggan Bulan Ini</th>
+                            <th>Total Pelanggan</th>
+                            <th>Total Pendapatan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-laporan">
+                        <!-- Data dari API -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL TAMBAH LAYANAN -->
+    <div id="modal-layanan" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModalLayanan()">&times;</span>
+            <h2 id="modal-layanan-title" style="margin-bottom: 20px;">Tambah Layanan Baru</h2>
+            <form id="form-layanan" onsubmit="simpanLayanan(event)">
+                <input type="hidden" id="layanan-id" value="">
+                <div class="form-group">
+                    <label>Nama Layanan</label>
+                    <input type="text" id="new-nama-layanan" required>
+                </div>
+                <div class="form-group">
+                    <label>Harga (Rp)</label>
+                    <input type="number" id="new-harga-layanan" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Singkat</label>
+                    <input type="text" id="new-deskripsi-layanan">
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">Simpan Layanan</button>
+            </form>
+        </div>
+    </div>
+    <!-- MODAL TAMBAH CAPSTER -->
+    <div id="modal-capster" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModalCapster()">&times;</span>
+            <h2 id="modal-capster-title" style="margin-bottom: 20px;">Tambah Capster Baru</h2>
+            <form id="form-capster" onsubmit="simpanCapster(event)">
+                <input type="hidden" id="capster-id" value="">
+                <div class="form-group">
+                    <label>Nama Capster <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="new-nama-capster" required>
+                </div>
+                <div class="form-group">
+                    <label>No HP</label>
+                    <input type="text" id="new-nohp-capster">
+                </div>
+                <div class="form-group">
+                    <label>Alamat</label>
+                    <input type="text" id="new-alamat-capster">
+                </div>
+                <div class="form-group">
+                    <label>Target Pelanggan Harian</label>
+                    <input type="number" id="new-target-capster" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="new-status-capster" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:var(--text-main);">
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">Simpan Capster</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- STRUK PRINT (Hidden default) -->
+    <div id="print-area">
+        <div class="print-header">
+            <h2>NDYSKY BARBERSHOP</h2>
+            <p>Jl. Contoh Barbershop No. 123</p>
+            <p>Telp: 0812-3456-7890</p>
+        </div>
+        <div class="print-divider"></div>
+        <div class="print-info">
+            <div><span>Kode</span><span>: <span id="print-kode"></span></span></div>
+            <div><span>Tanggal</span><span>: <span id="print-tanggal"></span></span></div>
+            <div><span>Kasir</span><span>: <span id="print-kasir">Admin</span></span></div>
+            <div><span>Capster</span><span>: <span id="print-nama-capster"></span></span></div>
+            <div id="print-pelanggan-container" style="display:none;"><span>Pelanggan</span><span>: <span id="print-pelanggan"></span></span></div>
+        </div>
+        <div class="print-divider"></div>
+        <table id="print-items-table" class="print-table">
+            <!-- Items from JS -->
+        </table>
+        <div class="print-divider"></div>
+        <table class="print-table print-totals">
+            <tr><td>Subtotal</td><td id="print-subtotal">Rp 0</td></tr>
+            <tr id="row-diskon" style="display:none;"><td>Diskon</td><td id="print-diskon">Rp 0</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong id="print-total">Rp 0</strong></td></tr>
+            <tr><td>Bayar</td><td id="print-bayar">Rp 0</td></tr>
+            <tr><td>Kembali</td><td id="print-kembali">Rp 0</td></tr>
+        </table>
+        <div class="print-divider"></div>
+        <div class="print-footer">
+            <p>Terima Kasih Atas Kunjungan Anda</p>
+            <p>Layanan yang sudah dipesan tidak dapat dibatalkan</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <script src="script.js?v=3"></script>
+</body>
+</html>

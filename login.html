@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Ndysky Barbershop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #121212;
+            --bg-card: #1e1e1e;
+            --primary: #d4af37;
+            /* Gold */
+            --primary-hover: #b5952f;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(212, 175, 55, 0.2);
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #121212 70%);
+        }
+
+        .login-container {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #121212;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: var(--primary-hover);
+        }
+
+        #error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-cut"></i>
+        </div>
+        <h2>Ndysky Barbershop</h2>
+        <p>Login to manage your barbershop</p>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>Username</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login">Sign In</button>
+            <div id="error-msg">Invalid username or password!</div>
+
+            <div style="margin-top: 20px; font-size: 14px;">
+                <span style="color: var(--text-muted);">Don't have an account?</span>
+                <a href="register.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Register
+                    Here</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Simple client-side auth for demonstration
+        document.getElementById('login-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-msg');
+
+            // Hardcoded credential: admin / admin123
+            let isValid = false;
+            let loggedInUser = '';
+
+            if (user === 'admin' && pass === 'admin123') {
+                isValid = true;
+                loggedInUser = 'Admin Barbershop';
+            } else {
+                // Check localStorage users
+                const storedUsersStr = localStorage.getItem('barberpos_users');
+                if (storedUsersStr) {
+                    const storedUsers = JSON.parse(storedUsersStr);
+                    const foundUser = storedUsers.find(u => u.username === user && u.password === pass);
+                    if (foundUser) {
+                        isValid = true;
+                        loggedInUser = foundUser.fullname;
+                    }
+                }
+            }
+
+            if (isValid) {
+                localStorage.setItem('barberpos_loggedin', 'true');
+                localStorage.setItem('barberpos_user', loggedInUser);
+                window.location.href = 'index.html';
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('barberpos_loggedin') === 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>
