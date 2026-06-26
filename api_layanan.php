@@ -4,14 +4,15 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 header('Content-Type: application/json');
-header('Content-Type: application/json');
 require 'koneksi.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents("php://input"), true);
-    if (isset($data['action']) && $data['action'] == 'add') {
-        $nama = $data['nama_layanan'];
-        $harga = $data['harga'];
+$method = $_SERVER['REQUEST_METHOD'];
+
+switch ($method) {
+    case 'POST':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $nama = $data['nama_layanan'] ?? '';
+        $harga = $data['harga'] ?? 0;
         $deskripsi = $data['deskripsi'] ?? '';
 
         $stmt = $conn->prepare("INSERT INTO layanan (nama_layanan, harga, deskripsi) VALUES (?, ?, ?)");
@@ -23,11 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['status' => 'error', 'message' => $conn->error]);
         }
         $stmt->close();
-        exit;
-    } elseif (isset($data['action']) && $data['action'] == 'edit') {
-        $id = $data['id'];
-        $nama = $data['nama_layanan'];
-        $harga = $data['harga'];
+        break;
+
+    case 'PUT':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = $data['id'] ?? 0;
+        $nama = $data['nama_layanan'] ?? '';
+        $harga = $data['harga'] ?? 0;
         $deskripsi = $data['deskripsi'] ?? '';
 
         $stmt = $conn->prepare("UPDATE layanan SET nama_layanan=?, harga=?, deskripsi=? WHERE id=?");
@@ -39,9 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['status' => 'error', 'message' => $conn->error]);
         }
         $stmt->close();
-        exit;
-    } elseif (isset($data['action']) && $data['action'] == 'delete') {
-        $id = $data['id'];
+        break;
+
+    case 'DELETE':
+        $data = json_decode(file_get_contents("php://input"), true);
+        $id = $data['id'] ?? (isset($_GET['id']) ? $_GET['id'] : 0);
+
+        if (!$id) {
+            echo json_encode(['status' => 'error', 'message' => 'ID tidak ditemukan']);
+            break;
+        }
 
         $stmt = $conn->prepare("DELETE FROM layanan WHERE id=?");
         $stmt->bind_param("i", $id);
@@ -52,29 +62,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['status' => 'error', 'message' => $conn->error]);
         }
         $stmt->close();
-        exit;
-    }
+        break;
+
+    case 'GET':
+    default:
+        $sql = "SELECT * FROM layanan ORDER BY id ASC";
+        $result = $conn->query($sql);
+
+        $layanan = [];
+        if ($result && $result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                $layanan[] = $row;
+            }
+        } else {
+            // Jika data kosong, beri data default sesuai SQL agar frontend tetap jalan jika belum di-seed
+            $layanan = [
+                ['id' => 1, 'nama_layanan' => 'Potong Rambut', 'harga' => 25000, 'deskripsi' => 'Potong rambut standar'],
+                ['id' => 2, 'nama_layanan' => 'Cukur Jenggot', 'harga' => 15000, 'deskripsi' => 'Perapihan jenggot'],
+                ['id' => 3, 'nama_layanan' => 'Hair Coloring', 'harga' => 80000, 'deskripsi' => 'Pewarnaan rambut'],
+                ['id' => 4, 'nama_layanan' => 'Creambath', 'harga' => 50000, 'deskripsi' => 'Perawatan rambut'],
+                ['id' => 5, 'nama_layanan' => 'Hair Wash', 'harga' => 10000, 'deskripsi' => 'Cuci rambut']
+            ];
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $layanan]);
+        break;
 }
-
-// GET method: Fetch all layanan
-$sql = "SELECT * FROM layanan ORDER BY id ASC";
-$result = $conn->query($sql);
-
-$layanan = [];
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $layanan[] = $row;
-    }
-} else {
-    // Jika data kosong, beri data default sesuai SQL agar frontend tetap jalan jika belum di-seed
-    $layanan = [
-        ['id' => 1, 'nama_layanan' => 'Potong Rambut', 'harga' => 25000, 'deskripsi' => 'Potong rambut standar'],
-        ['id' => 2, 'nama_layanan' => 'Cukur Jenggot', 'harga' => 15000, 'deskripsi' => 'Perapihan jenggot'],
-        ['id' => 3, 'nama_layanan' => 'Hair Coloring', 'harga' => 80000, 'deskripsi' => 'Pewarnaan rambut'],
-        ['id' => 4, 'nama_layanan' => 'Creambath', 'harga' => 50000, 'deskripsi' => 'Perawatan rambut'],
-        ['id' => 5, 'nama_layanan' => 'Hair Wash', 'harga' => 10000, 'deskripsi' => 'Cuci rambut']
-    ];
-}
-
-echo json_encode(['status' => 'success', 'data' => $layanan]);
 ?>

@@ -5,23 +5,37 @@ require 'koneksi.php';
 $action = $_GET['action'] ?? '';
 
 if ($action == 'list') {
-    $status = $_GET['status'] ?? '';
-    
-    $sql = "SELECT * FROM capster";
-    if ($status === 'aktif') {
-        $sql .= " WHERE status = 'Aktif'";
-    }
-    $sql .= " ORDER BY id DESC";
-    
-    $result = $conn->query($sql);
-    $data = [];
-    if ($result && $result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $data[] = $row;
-        }
-    }
-    echo json_encode(['status' => 'success', 'data' => $data]);
+    $status = strtolower($_GET['status'] ?? '');
 
+    $sql = "SELECT * FROM capster";
+
+    if ($status === 'aktif') {
+        $sql .= " WHERE status='Aktif'";
+    } elseif ($status === 'nonaktif') {
+        $sql .= " WHERE status='Nonaktif'";
+    } elseif ($status !== '') {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Status tidak valid'
+        ]);
+        exit;
+    }
+
+    $sql .= " ORDER BY id DESC";
+    $result = $conn->query($sql);
+$data = [];
+
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+}
+
+echo json_encode([
+    'status' => 'success',
+    'data' => $data
+]);
+exit;
 } elseif ($action == 'add') {
 
     $data = json_decode(file_get_contents("php://input"), true);
